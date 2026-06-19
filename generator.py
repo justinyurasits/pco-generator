@@ -252,7 +252,7 @@ Generate the complete PCO including the line-item cost table. Verify that line i
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2500,
+        max_tokens=1500,
         temperature=0,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_message}]
