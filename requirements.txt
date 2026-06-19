@@ -5,3 +5,4 @@ flask
 gunicorn
 resend
 flask-cors
+flask-limiter
