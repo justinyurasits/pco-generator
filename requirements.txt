@@ -4,3 +4,4 @@ python-docx
 flask
 gunicorn
 resend
+flask-cors
