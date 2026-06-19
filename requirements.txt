@@ -1,0 +1,5 @@
+anthropic
+reportlab
+python-docx
+flask
+gunicorn
