@@ -20,7 +20,8 @@ from flask import Flask, request, jsonify
 import resend
 from generator import generate
 from flask_limiter.util import get_remote_address
-from flask_cors import CORSfrom flask_limiter import Limiter
+from flask_cors import CORS
+from flask_limiter import Limiter
 
 
 app = Flask(__name__)
