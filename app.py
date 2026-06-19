@@ -32,7 +32,7 @@ resend.api_key = os.environ.get("RESEND_API_KEY")
 
 # Change to verified domain once draftconstructionchangeorder.com is
 # verified in the Resend dashboard
-FROM_EMAIL = "PCO Generator <onboarding@resend.dev>"
+FROM_EMAIL = "PCO Generator <noreply@draftconstructionchangeorder.com>"
 
 
 # ---------------------------------------------------------------------------
