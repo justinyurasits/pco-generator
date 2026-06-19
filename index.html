@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draft a Change Order — Free PCO Generator for Contractors</title>
+  <style>
+    /* ── Tokens ─────────────────────────────────────────────────────── */
+    :root {
+      --ink:        #1a1a18;
+      --steel:      #3d4a52;
+      --concrete:   #8a9299;
+      --chalk:      #f4f2ee;
+      --white:      #ffffff;
+      --amber:      #c87a2f;
+      --amber-dark: #a05e1a;
+      --green:      #2e6b44;
+      --red:        #b83232;
+      --border:     #d4cfc8;
+      --radius:     6px;
+      --mono:       'Courier New', Courier, monospace;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--chalk);
+      color: var(--ink);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    header {
+      background: var(--ink);
+      color: var(--white);
+      padding: 20px 24px 18px;
+      border-bottom: 3px solid var(--amber);
+    }
+    .header-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    header h1 {
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #b0aaa0;
+      max-width: 540px;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ── Section labels ─────────────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--concrete);
+      margin: 28px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label:first-of-type { margin-top: 0; }
+
+    /* ── Form fields ─────────────────────────────────────────────────── */
+    .field { margin-bottom: 16px; }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--steel);
+      margin-bottom: 5px;
+    }
+    label .optional {
+      font-weight: 400;
+      color: var(--concrete);
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 13px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--ink);
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(200, 122, 47, 0.12);
+    }
+    textarea { resize: vertical; min-height: 130px; line-height: 1.55; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a9299' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      padding-right: 36px;
+    }
+
+    /* ── Voice input ─────────────────────────────────────────────────── */
+    .scope-wrapper { position: relative; }
+    .voice-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--ink);
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      z-index: 2;
+    }
+    .voice-btn:hover { background: var(--steel); }
+    .voice-btn.recording {
+      background: var(--red);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .voice-btn svg { width: 18px; height: 18px; fill: currentColor; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(184,50,50,0.4); }
+      50%       { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(184,50,50,0); }
+    }
+    .voice-status {
+      font-size: 12px;
+      color: var(--concrete);
+      margin-top: 5px;
+      min-height: 18px;
+    }
+    .voice-status.recording { color: var(--red); font-weight: 600; }
+    #scope_description { padding-bottom: 52px; }
+
+    /* ── Cost fields ─────────────────────────────────────────────────── */
+    .cost-input-wrap { position: relative; }
+    .cost-input-wrap span {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--concrete);
+      font-size: 15px;
+      pointer-events: none;
+    }
+    .cost-input-wrap input { padding-left: 26px; }
+
+    /* ── Info box ────────────────────────────────────────────────────── */
+    .info-box {
+      background: #eef4f0;
+      border: 1px solid #c0d9c8;
+      border-radius: var(--radius);
+      padding: 13px 15px;
+      font-size: 13px;
+      color: var(--green);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .info-box strong { display: block; margin-bottom: 3px; }
+
+    /* ── Submit ──────────────────────────────────────────────────────── */
+    .submit-area { margin-top: 28px; }
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--amber);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .submit-btn:hover:not(:disabled) { background: var(--amber-dark); }
+    .submit-btn:active:not(:disabled) { transform: scale(0.99); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Status messages ─────────────────────────────────────────────── */
+    .status {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.55;
+      text-align: center;
+    }
+    .status.loading {
+      display: block;
+      background: #f0ece4;
+      color: var(--steel);
+      border: 1px solid var(--border);
+    }
+    .status.success {
+      display: block;
+      background: #eef4f0;
+      color: var(--green);
+      border: 1px solid #c0d9c8;
+    }
+    .status.error {
+      display: block;
+      background: #fdf0f0;
+      color: var(--red);
+      border: 1px solid #e8c0c0;
+    }
+    .status strong { display: block; font-size: 16px; margin-bottom: 4px; }
+
+    /* ── Spinner ─────────────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--concrete);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--amber); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-eyebrow">Free tool for contractors</div>
+  <h1>Draft a Change Order in 60 seconds</h1>
+  <p>Describe what changed in the field. Get a professional PCO delivered to your inbox — with scope language, markup, and signature blocks ready.</p>
+</header>
+
+<main>
+
+  <div class="info-box">
+    <strong>How it works</strong>
+    Fill in the project details and describe the scope change — type it or record a voice memo. We'll generate a professional Potential Change Order (PCO) and email it to you as both a PDF and an editable Word document. Review it, make any edits, and send it to your client.
+  </div>
+
+  <form id="pcoForm" novalidate>
+
+    <div class="section-label">Your info</div>
+
+    <div class="field">
+      <label for="email">Email address — where to send the PCO</label>
+      <input type="email" id="email" name="email" placeholder="you@yourcompany.com" required />
+    </div>
+
+    <div class="field">
+      <label for="company_name">Company name</label>
+      <input type="text" id="company_name" name="company_name" placeholder="Acme General Contracting" required />
+    </div>
+
+    <div class="section-label">Project details</div>
+
+    <div class="field">
+      <label for="project_name">Project name</label>
+      <input type="text" id="project_name" name="project_name" placeholder="Johnson Residence Addition" required />
+    </div>
+
+    <div class="field">
+      <label for="project_address">Project address</label>
+      <input type="text" id="project_address" name="project_address" placeholder="47 Maple Street, Lexington, MA 01773" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="change_order_number">PCO number</label>
+        <input type="text" id="change_order_number" name="change_order_number" placeholder="001" />
+      </div>
+      <div class="field">
+        <label for="original_contract_date">Original contract date</label>
+        <input type="date" id="original_contract_date" name="original_contract_date" />
+      </div>
+    </div>
+
+    <div class="section-label">The change</div>
+
+    <div class="field">
+      <label for="reason_for_change">Cause of change</label>
+      <select id="reason_for_change" name="reason_for_change" required>
+        <option value="">Select a cause...</option>
+        <option value="Unforeseen Field Condition">Unforeseen Field Condition</option>
+        <option value="Owner-Requested Change">Owner-Requested Change</option>
+        <option value="Design Revision / ASI">Design Revision / ASI</option>
+        <option value="Allowance Over/Under">Allowance Over/Under</option>
+        <option value="Coordination Conflict">Coordination Conflict</option>
+        <option value="Unit Price Work">Unit Price Work</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="scope_description">
+        Describe what happened and what needs to be done
+        <span class="optional">— type it or use the mic</span>
+      </label>
+      <div class="scope-wrapper">
+        <textarea
+          id="scope_description"
+          name="scope_description"
+          placeholder="e.g. Found rot in the subfloor under the master bath when we pulled up the tile. About 60 sq ft of 3/4 plywood needs to come out, plus we need to sister 4 floor joists where they're soft. Owner was on site and said go ahead."
+          required
+        ></textarea>
+        <button type="button" class="voice-btn" id="voiceBtn" title="Record voice memo" aria-label="Start voice recording">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h2v-2.07A8.001 8.001 0 0 0 20 11h-2a6 6 0 0 1-12 0H4a8.001 8.001 0 0 0 7 7.93z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="voice-status" id="voiceStatus"></div>
+    </div>
+
+    <div class="section-label">Cost estimate <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;color:var(--concrete);">— we apply your standard 21% markup automatically</span></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="labor_cost">Labor cost <span class="optional">(optional)</span></label>
+        <div class="cost-input-wrap">
+          <span>$</span>
+          <input type="text" id="labor_cost" name="labor_cost" placeholder="2,400" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="material_cost">Material cost <span class="optional">(optional)</span></label>
+        <div class="cost-input-wrap">
+          <span>$</span>
+          <input type="text" id="material_cost" name="material_cost" placeholder="680" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="schedule_days">Schedule impact <span class="optional">(calendar days added)</span></label>
+      <input type="number" id="schedule_days" name="schedule_days" placeholder="2" min="0" />
+    </div>
+
+    <div class="submit-area">
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Generate my PCO — send to my email
+      </button>
+    </div>
+
+    <div class="status" id="statusMsg"></div>
+
+  </form>
+
+</main>
+
+<footer>
+  Built on the <a href="#">Operational Architecture Method</a> &nbsp;·&nbsp;
+  Grounded in real construction SOPs and pricing data &nbsp;·&nbsp;
+  <a href="#">How this works</a>
+</footer>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────
+  // Replace with your Render URL once deployed
+  const API_URL = 'https://pco-generator.onrender.com/generate';
+
+  // ── Voice input (Web Speech API — no server needed) ────────────────
+  const voiceBtn    = document.getElementById('voiceBtn');
+  const voiceStatus = document.getElementById('voiceStatus');
+  const scopeField  = document.getElementById('scope_description');
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    voiceBtn.style.display = 'none';
+  } else {
+    const recognition = new SpeechRecognition();
+    recognition.continuous      = true;
+    recognition.interimResults  = true;
+    recognition.lang            = 'en-US';
+
+    let isRecording  = false;
+    let finalText    = '';
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) { finalText += t + ' '; }
+        else { interim = t; }
+      }
+      voiceStatus.textContent = interim ? `Hearing: "${interim}"` : 'Listening...';
+    };
+
+    recognition.onend = () => {
+      if (finalText.trim()) {
+        const existing = scopeField.value.trim();
+        scopeField.value = existing ? existing + ' ' + finalText.trim() : finalText.trim();
+      }
+      finalText = '';
+      isRecording = false;
+      voiceBtn.classList.remove('recording');
+      voiceBtn.setAttribute('aria-label', 'Start voice recording');
+      voiceStatus.textContent = 'Done — check the description above.';
+      voiceStatus.className = 'voice-status';
+    };
+
+    recognition.onerror = (e) => {
+      voiceStatus.textContent = e.error === 'not-allowed'
+        ? 'Microphone access denied — please type your description.'
+        : 'Could not hear audio — please type your description.';
+      isRecording = false;
+      voiceBtn.classList.remove('recording');
+    };
+
+    voiceBtn.addEventListener('click', () => {
+      if (!isRecording) {
+        finalText = '';
+        recognition.start();
+        isRecording = true;
+        voiceBtn.classList.add('recording');
+        voiceBtn.setAttribute('aria-label', 'Stop recording');
+        voiceStatus.textContent = 'Listening... tap to stop';
+        voiceStatus.className = 'voice-status recording';
+      } else {
+        recognition.stop();
+      }
+    });
+  }
+
+  // ── Form submit ──────────────────────────────────────────────────────
+  const form      = document.getElementById('pcoForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Basic validation
+    const required = ['email', 'company_name', 'project_name', 'reason_for_change', 'scope_description'];
+    for (const id of required) {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.focus();
+        showStatus('error', 'Please fill in all required fields before submitting.');
+        return;
+      }
+    }
+
+    if (document.getElementById('scope_description').value.trim().length < 20) {
+      showStatus('error', 'Please describe the scope change in more detail — at least a sentence or two.');
+      return;
+    }
+
+    // Build payload
+    const data = {
+      email:                  document.getElementById('email').value.trim(),
+      company_name:           document.getElementById('company_name').value.trim(),
+      project_name:           document.getElementById('project_name').value.trim(),
+      project_address:        document.getElementById('project_address').value.trim(),
+      change_order_number:    document.getElementById('change_order_number').value.trim() || '001',
+      original_contract_date: document.getElementById('original_contract_date').value || '',
+      reason_for_change:      document.getElementById('reason_for_change').value,
+      scope_description:      document.getElementById('scope_description').value.trim(),
+      labor_cost:             document.getElementById('labor_cost').value.trim(),
+      material_cost:          document.getElementById('material_cost').value.trim(),
+      schedule_days:          document.getElementById('schedule_days').value.trim(),
+      date:                   new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    };
+
+    submitBtn.disabled = true;
+    showStatus('loading', '<span class="spinner"></span> Generating your PCO — this takes about 20 seconds...');
+
+    try {
+      const res = await fetch(API_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        showStatus('success',
+          `<strong>Your PCO is on its way.</strong>
+          Check ${data.email} — you'll have a PDF and an editable Word doc within the next minute.
+          Review it, make any edits, and send it to your client.`
+        );
+        form.reset();
+      } else {
+        showStatus('error', `<strong>Something went wrong.</strong> ${result.error || 'Please try again in a moment.'}`);
+        submitBtn.disabled = false;
+      }
+
+    } catch {
+      showStatus('error', '<strong>Could not reach the server.</strong> Check your connection and try again.');
+      submitBtn.disabled = false;
+    }
+  });
+
+  function showStatus(type, html) {
+    statusMsg.className = `status ${type}`;
+    statusMsg.innerHTML = html;
+  }
+</script>
+
+</body>
+</html>

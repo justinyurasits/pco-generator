@@ -1,29 +1,41 @@
 #!/usr/bin/env python3
 """
-Flask API wrapper for the Change Order Generator.
-Not used locally — deploy this to Render when ready to publish.
+Flask API wrapper for the PCO Generator.
+Receives form data, generates PDF + Word doc, emails both via Resend.
 
-Endpoint: POST /generate
-Payload:  JSON matching the data dict in generator.py
-Returns:  JSON with base64-encoded PDF and Word doc
+Environment variables required:
+  ANTHROPIC_API_KEY  — for Claude generation
+  RESEND_API_KEY     — for email delivery
 
-Deploy steps (Render free tier):
-1. Push this repo to GitHub
-2. Create new Web Service on render.com, connect the repo
-3. Build command: pip install -r requirements.txt
-4. Start command: gunicorn app:app
-5. Add env var: ANTHROPIC_API_KEY
-6. Point n8n HTTP Request node at the Render URL
+FROM address:
+  During testing: uses onboarding@resend.dev (works to any address)
+  For production: verify draftconstructionchangeorder.com in Resend dashboard
+  then change FROM_EMAIL to noreply@draftconstructionchangeorder.com
 """
 
 import os
 import base64
 import tempfile
 from flask import Flask, request, jsonify
+import resend
 from generator import generate
 
 app = Flask(__name__)
 
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
+
+# Change to verified domain once draftconstructionchangeorder.com is
+# verified in the Resend dashboard
+FROM_EMAIL = "PCO Generator <onboarding@resend.dev>"
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -31,41 +43,100 @@ def health():
 
 
 @app.route("/generate", methods=["POST"])
-def generate_change_order():
+def generate_and_email():
     data = request.get_json()
 
     if not data:
         return jsonify({"error": "No JSON payload received"}), 400
 
-    required = ["company_name", "project_name", "scope_description"]
+    required = ["email", "company_name", "project_name", "scope_description", "reason_for_change"]
     missing = [f for f in required if not data.get(f)]
     if missing:
         return jsonify({"error": f"Missing required fields: {missing}"}), 400
 
     if len(data.get("scope_description", "")) < 10:
         return jsonify({
-            "error": "Scope description is too short. Please describe the change in detail."
+            "error": "Scope description too short. Please describe the change in more detail."
         }), 400
+
+    recipient_email = data.get("email")
 
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = generate(data, output_dir=tmpdir)
 
             with open(result["pdf"], "rb") as f:
-                pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
+                pdf_bytes = f.read()
             with open(result["word"], "rb") as f:
-                word_b64 = base64.b64encode(f.read()).decode("utf-8")
+                word_bytes = f.read()
+
+            co_num       = data.get("change_order_number", "001")
+            project_name = data.get("project_name", "Your Project")
+            company_name = data.get("company_name", "")
+
+            pdf_filename  = f"PCO_{co_num}_{project_name.replace(' ', '_')}.pdf"
+            word_filename = f"PCO_{co_num}_{project_name.replace(' ', '_')}.docx"
+
+        subject = f"Your PCO is ready — {project_name}, PCO No. {co_num}"
+
+        html_body = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    max-width: 560px; margin: 0 auto; color: #1a1a18;">
+
+          <div style="background: #1a1a18; padding: 20px 24px; border-bottom: 3px solid #c87a2f;">
+            <p style="color: #c87a2f; font-size: 11px; letter-spacing: 0.1em;
+                      text-transform: uppercase; margin: 0 0 6px;">PCO Generator</p>
+            <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 700;">
+              Your Potential Change Order is ready
+            </h1>
+          </div>
+
+          <div style="padding: 28px 24px; background: #f4f2ee;">
+            <p style="margin: 0 0 16px;">Hi {company_name},</p>
+            <p style="margin: 0 0 16px;">
+              Your PCO for <strong>{project_name}</strong> (PCO No. {co_num}) is attached
+              in two formats:
+            </p>
+            <ul style="margin: 0 0 20px; padding-left: 20px; line-height: 1.8;">
+              <li><strong>PDF</strong> — ready to send to your client as-is</li>
+              <li><strong>Word document</strong> — editable if you need to make changes first</li>
+            </ul>
+            <div style="background: #eef4f0; border: 1px solid #c0d9c8; border-radius: 6px;
+                        padding: 14px 16px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 13px; color: #2e6b44;">
+                <strong>Before you send:</strong> Review the scope language, check the cost
+                breakdown, and confirm the cause of change. This is a draft — review before
+                sending to your client.
+              </p>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: #8a9299;">
+              Generated by <a href="https://draftconstructionchangeorder.com"
+              style="color: #c87a2f;">draftconstructionchangeorder.com</a>
+            </p>
+          </div>
+        </div>
+        """
+
+        email_params = {
+            "from":    FROM_EMAIL,
+            "to":      [recipient_email],
+            "subject": subject,
+            "html":    html_body,
+            "attachments": [
+                {"filename": pdf_filename,  "content": list(pdf_bytes)},
+                {"filename": word_filename, "content": list(word_bytes)},
+            ],
+        }
+
+        resend.Emails.send(email_params)
 
         return jsonify({
             "success": True,
-            "generated_text": result["generated_text"],
-            "pdf_base64":  pdf_b64,
-            "word_base64": word_b64,
-            "pdf_filename":  os.path.basename(result["pdf"]),
-            "word_filename": os.path.basename(result["word"]),
+            "message": f"PCO emailed to {recipient_email}",
         })
 
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
