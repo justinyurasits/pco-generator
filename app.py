@@ -19,10 +19,16 @@ import tempfile
 from flask import Flask, request, jsonify
 import resend
 from generator import generate
-from flask_cors import CORS
+from flask_cors import CORSfrom flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 CORS(app)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day"]
+)
 
 # ---------------------------------------------------------------------------
 # Config
@@ -43,8 +49,8 @@ FROM_EMAIL = "PCO Generator <noreply@draftconstructionchangeorder.com>"
 def health():
     return jsonify({"status": "ok"})
 
-
 @app.route("/generate", methods=["POST"])
+@limiter.limit("10 per hour")
 def generate_and_email():
     data = request.get_json()
 
