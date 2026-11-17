@@ -6,6 +6,10 @@ Turns a description of a change into a formatted construction change order —
 scope language, pricing, and the structure a general contractor actually
 issues — as a Word document and a PDF.
 
+**Status:** active, live. Construction OS builds the same document as its first
+governed slice, in [`construction-os-workbench`](https://github.com/justinyurasits/construction-os-workbench);
+this repo is the standalone public tool.
+
 ## Why
 
 A change order is the document that decides whether work performed gets paid
@@ -52,3 +56,13 @@ theirs.
 **No document history.** Each generation is independent. Output is emailed and
 that's the end of it — there's no way to retrieve a past draft or iterate on
 one.
+
+## Running and testing it
+
+```bash
+pip install -r requirements.txt
+python app.py         # local server; needs ANTHROPIC_API_KEY and RESEND_API_KEY in the environment
+python test_run.py    # runs the generator on realistic, messy field notes
+```
+
+`test_run.py` makes real API calls: it's an output-quality check, not a unit test suite.
