@@ -10,6 +10,8 @@ issues — as a Word document and a PDF.
 governed slice, in [`construction-os-workbench`](https://github.com/justinyurasits/construction-os-workbench);
 this repo is the standalone public tool.
 
+**Design:** [design/construction-os-demos/pco-generator](https://github.com/justinyurasits/design/tree/main/construction-os-demos/pco-generator)
+
 ## Why
 
 A change order is the document that decides whether work performed gets paid
