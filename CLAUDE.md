@@ -1,6 +1,6 @@
 # pco-generator
 
-<!-- standard: design/_template/repo/CLAUDE.md v1.4
+<!-- standard: design/_template/repo/CLAUDE.md v1.5
      Sections 1–6 are the standard: copy them unchanged, filling in only the <angle brackets>.
      Section 7 is this repository's own. To change a standard rule here, say so under
      "Overrides" in section 7, with the reason. -->
@@ -65,7 +65,10 @@ Fill in `.github/pull_request_template.md`:
 - `Closes #<N>`, and what changed and why, in plain English.
 - How each acceptance criterion in the issue was checked.
 - **Decisions (proposed):** choices made while coding: the decision, the options, why,
-  and what would change it. Merging the pull request approves them.
+  and what would change it. Merging the pull request approves them. That covers
+  implementation choices inside the issue only. A decision that changes a requirement,
+  the architecture, a security boundary or documented behavior is a design change
+  (section 2): stop and propose it instead.
 - **Build notes:** what you did, what broke, what it taught.
 
 ## 6. Roll-up, ask before, never
