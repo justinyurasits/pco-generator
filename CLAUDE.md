@@ -1,6 +1,6 @@
 # pco-generator
 
-<!-- standard: design/_template/repo/CLAUDE.md v1.3
+<!-- standard: design/_template/repo/CLAUDE.md v1.4
      Sections 1–6 are the standard: copy them unchanged, filling in only the <angle brackets>.
      Section 7 is this repository's own. To change a standard rule here, say so under
      "Overrides" in section 7, with the reason. -->
@@ -31,9 +31,11 @@ Before proposing work, read in this order (skip any the project doesn't have yet
    the issue belongs to
 7. `../design/construction-os-demos/pco-generator/plan.md`: the milestones still ahead
 
-- **Design leads, code follows.** Never edit design docs from this repository. If the
-  work needs a change to what the product does, to a requirement or to the architecture,
-  stop and propose the change. Don't build ahead of the design.
+- **Design leads, code follows.** If the work needs a change to what the product does,
+  to a requirement or to the architecture, stop and propose the change. Once Justin
+  approves it, make it in the Claude Doc (synced files) or in a pull request in `design`
+  (repo-authored files), and build against it after it's merged. Never put a design
+  change in this repository's pull request, and don't build ahead of the design.
 - **When the design is silent, ask.** Don't improvise behavior, copy or scope.
 - **When the design and this repository disagree, say so.** Don't guess which is right.
 - A synced design file starts with a header naming its Claude Doc. If the two differ,
