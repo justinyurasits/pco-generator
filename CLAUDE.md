@@ -1,6 +1,6 @@
 # pco-generator
 
-<!-- standard: design/_template/repo/CLAUDE.md v1.2
+<!-- standard: design/_template/repo/CLAUDE.md v1.3
      Sections 1–6 are the standard: copy them unchanged, filling in only the <angle brackets>.
      Section 7 is this repository's own. To change a standard rule here, say so under
      "Overrides" in section 7, with the reason. -->
@@ -77,6 +77,11 @@ issue or milestone is done, and about every ten turns of work since you last ask
   the line `Roll-up: <repo> #<first>–#<last>`. For files synced from Claude Docs, add
   them as suggestions in the Claude Doc if you have the Docs connector; otherwise give
   Justin the text to paste. For repo-authored files, open a pull request in `design`.
+- Every roll-up also checks for drift. For each synced file in the component and its
+  project, compare the `rev` in its `sync-manifest.yaml` with the Claude Doc's current
+  revision, and offer a sync pull request in `design` for any doc that has moved ahead.
+  Without the Docs connector, list those docs and their links from `../design/DOCS.md`
+  and ask Justin to check them.
 - On no: don't ask again for another ten turns.
 - Nothing enters the design record until Justin approves it.
 
